@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<title>Pipa Organa Tertutup</title>
+<style>
+    body {
+        font-family: Arial;
+        text-align: center;
+        background: #0f172a;
+        color: white;
+    }
+    h1 {
+        color: #38bdf8;
+    }
+    .control {
+        margin: 15px;
+    }
+    input, select {
+        padding: 5px;
+        font-size: 16px;
+    }
+    canvas {
+        background: #020617;
+        border: 2px solid #38bdf8;
+        margin-top: 20px;
+    }
+</style>
+</head>
+<body>
+
+<h1>🎶 Pipa Organa Tertutup</h1>
+
+<div class="control">
+    Panjang Seruling (m): 
+    <input type="range" id="length" min="0.2" max="1.2" step="0.01" value="0.6">
+    <span id="Lval">0.60</span>
+</div>
+
+<div class="control">
+    Harmonik ke:
+    <select id="harmonic">
+        <option value="1">1 (Nada Dasar)</option>
+        <option value="2">2</option>
+        <option value="3">3</option>
+        <option value="4">4</option>
+    </select>
+</div>
+
+<h2 id="freqDisplay">Frekuensi: - Hz</h2>
+
+<canvas id="canvas" width="800" height="200"></canvas>
+
+<script>
+const canvas = document.getElementById("canvas");
+const ctx = canvas.getContext("2d");
+
+const lengthSlider = document.getElementById("length");
+const harmonicSelect = document.getElementById("harmonic");
+const Lval = document.getElementById("Lval");
+const freqDisplay = document.getElementById("freqDisplay");
+
+const v = 340; // cepat rambat bunyi
+
+let t = 0;
+
+function draw() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    let L = parseFloat(lengthSlider.value);
+    let n = parseInt(harmonicSelect.value);
+
+    let lambda = 2 * L / n;
+    let f = v / lambda;
+
+    freqDisplay.innerText = "Frekuensi: " + f.toFixed(2) + " Hz";
+    Lval.innerText = L.toFixed(2);
+
+    let scaleX = canvas.width / L;
+
+    ctx.beginPath();
+    for (let x = 0; x <= L; x += 0.001) {
+        let y = Math.sin(n * Math.PI * x / L) * Math.cos(2 * Math.PI * f * t);
+        let canvasX = x * scaleX;
+        let canvasY = canvas.height / 2 - y * 80;
+
+        if (x === 0) ctx.moveTo(canvasX, canvasY);
+        else ctx.lineTo(canvasX, canvasY);
+    }
+    ctx.strokeStyle = "#38bdf8";
+    ctx.lineWidth = 2;
+    ctx.stroke();
+
+    // gambar simpul (S) dan perut (P)
+    for (let i = 0; i <= n; i++) {
+        let xNode = i * L / n;
+        ctx.fillStyle = "red";
+        ctx.fillText("S", xNode * scaleX - 5, canvas.height / 2 + 15);
+    }
+
+    for (let i = 0; i < n; i++) {
+        let xAntinode = (i + 0.5) * L / n;
+        ctx.fillStyle = "yellow";
+        ctx.fillText("P", xAntinode * scaleX - 5, canvas.height / 2 - 15);
+    }
+
+    t += 0.01;
+    requestAnimationFrame(draw);
+}
+
+draw();
+</script>
+
+</body>
+</html>
