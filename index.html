@@ -1,225 +1,242 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-<meta charset="UTF-8">
-<title>Pipa Organa Tertutup Interaktif</title>
-<style>
-body{
-    background:#0f172a;
-    color:white;
-    text-align:center;
-    font-family:Arial;
-    margin:0;
-}
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Simulasi Pipa Organa Tertutup - Dwi Yono, S.Pd</title>
+    <style>
+        :root {
+            --primary: #f43f5e;
+            --secondary: #38bdf8;
+            --bg: #0f172a;
+            --card: #1e293b;
+            --text: #f8fafc;
+        }
 
-.controls{
-    position:absolute;
-    top:15px;
-    right:15px;
-}
-.controls button{
-    padding:10px 15px;
-    border:none;
-    border-radius:10px;
-    background:#22c55e;
-    color:white;
-    cursor:pointer;
-}
+        * { box-sizing: border-box; touch-action: manipulation; }
+        body { font-family: 'Segoe UI', system-ui, sans-serif; background: var(--bg); color: var(--text); margin: 0; display: flex; justify-content: center; padding: 10px; }
+        .wrapper { width: 100%; max-width: 800px; }
+        h2 { font-size: 1.2rem; text-align: center; color: var(--primary); margin: 10px 0; text-transform: uppercase; letter-spacing: 1px; }
 
-canvas{
-    background:#020617;
-    margin-top:20px;
-}
+        .status-bar {
+            background: var(--card);
+            display: grid; grid-template-columns: 1fr 1fr 1fr;
+            gap: 5px; padding: 15px; border-radius: 12px 12px 0 0;
+            border-bottom: 3px solid var(--primary); font-size: 0.8rem; font-weight: bold; text-align: center;
+        }
 
-.footer{
-    margin-top:15px;
-    font-size:14px;
-    color:#94a3b8;
-}
-</style>
+        .canvas-box { background: #000; position: relative; width: 100%; height: 300px; overflow: hidden; }
+        canvas { width: 100%; height: 100%; display: block; }
+
+        .controls { background: var(--card); padding: 20px; border-radius: 0 0 12px 12px; display: flex; flex-direction: column; gap: 18px; }
+        .control-row { display: flex; flex-direction: column; gap: 8px; }
+        
+        label { font-size: 0.75rem; color: #94a3b8; font-weight: bold; display: flex; justify-content: space-between; }
+        label span { color: var(--secondary); }
+
+        select {
+            background: #334155; color: white; border: 2px solid #475569; padding: 12px;
+            border-radius: 8px; font-size: 1rem; outline: none; cursor: pointer; appearance: none;
+            background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+            background-repeat: no-repeat; background-position: right 10px center; background-size: 1em;
+        }
+
+        input[type=range] { -webkit-appearance: none; width: 100%; height: 10px; background: #334155; border-radius: 5px; outline: none; }
+        input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 22px; height: 22px; background: var(--primary); border-radius: 50%; cursor: pointer; }
+
+        .btn-toggle {
+            background: var(--primary); color: white; border: none; padding: 16px; border-radius: 8px;
+            font-weight: bold; font-size: 0.9rem; cursor: pointer; transition: 0.3s;
+        }
+        .btn-toggle.active { background: #475569; }
+
+        .copyright { text-align: center; font-size: 0.75rem; color: #64748b; margin-top: 20px; line-height: 1.5; padding-bottom: 20px; border-top: 1px solid #334155; padding-top: 15px; }
+    </style>
 </head>
 <body>
 
-<div class="controls">
-    <button onclick="toggleSound()">🔊 ON / OFF</button>
-</div>
+<div class="wrapper">
+    <h2>Simulasi Pipa Organa Tertutup</h2>
+    
+    <div class="status-bar">
+        <div>Frekuensi:<br><span id="valFreq" style="color:var(--secondary)">85</span> Hz</div>
+        <div>Mode Nada:<br><span id="valMode" style="color:var(--secondary)">Dasar</span></div>
+        <div>&lambda;:<br><span id="valLambda" style="color:var(--secondary)">4.00</span> m</div>
+    </div>
 
-<h2>🎶 Pipa Organa Tertutup</h2>
+    <div class="canvas-box">
+        <canvas id="simCanvas"></canvas>
+    </div>
+    
+    <div class="controls">
+        <div class="control-row">
+            <label>Panjang Pipa (L) <span><span id="dispL">1.00</span> m</span></label>
+            <input type="range" id="pipeLength" min="0.5" max="2.0" step="0.01" value="1.00">
+        </div>
+        
+        <div class="control-row">
+            <label>Pilih Harmonik (Ganjil)</label>
+            <select id="harmonicSelect">
+                <option value="1">n = 1 (Nada Dasar)</option>
+                <option value="2">n = 2 (Nada Atas 1)</option>
+                <option value="3">n = 3 (Nada Atas 2)</option>
+                <option value="4">n = 4 (Nada Atas 3)</option>
+            </select>
+        </div>
 
-Panjang:
-<input type="range" id="L" min="0.2" max="1.2" step="0.01" value="0.6">
-<span id="Lval">0.60</span>
+        <button id="audioBtn" class="btn-toggle">AKTIFKAN SUARA</button>
+    </div>
 
-<br><br>
-
-Harmonik:
-<select id="n">
-<option value="1">Harmonik 1</option>
-<option value="2">Harmonik 2</option>
-<option value="3">Harmonik 3</option>
-<option value="4">Harmonik 4</option>
-</select>
-
-<h3 id="freq"></h3>
-
-<canvas id="c" width="800" height="260"></canvas>
-
-<div class="footer">
-    Dibuat oleh: <b>Dwi Yono, S.Pd</b> — Guru Fisika SMAN 1 Karanganyar
+    <div class="copyright">
+        <strong>&copy; 2026 Dwi Yono, S.Pd</strong><br>
+        Guru Fisika - SMAN 1 Karanganyar
+    </div>
 </div>
 
 <script>
-const canvas = document.getElementById("c");
-const ctx = canvas.getContext("2d");
+    const canvas = document.getElementById('simCanvas');
+    const ctx = canvas.getContext('2d');
+    
+    let L_val = 1.00;
+    let n_idx = 1; // n=1 adalah nada dasar
+    let time = 0;
+    let isPlaying = false;
+    let audioCtx, osc, gainNode;
 
-let t = 0;
-const v = 340;
-
-// AUDIO
-let audioCtx = null;
-let oscillator = null;
-let gainNode = null;
-let isPlaying = false;
-
-// 🔥 tetap pakai ganjil di belakang layar
-function getRealN(){
-    let n = parseInt(document.getElementById("n").value);
-    return 2*n - 1;
-}
-
-function startSound(freq){
-    if(!audioCtx){
-        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    function initCanvas() {
+        const dpr = window.devicePixelRatio || 1;
+        canvas.width = canvas.offsetWidth * dpr;
+        canvas.height = canvas.offsetHeight * dpr;
+        ctx.scale(dpr, dpr);
     }
 
-    oscillator = audioCtx.createOscillator();
-    gainNode = audioCtx.createGain();
+    function update() {
+        L_val = parseFloat(document.getElementById('pipeLength').value);
+        n_idx = parseInt(document.getElementById('harmonicSelect').value);
+        
+        // Rumus Pipa Organa Tertutup: f = (2n-1)v / 4L
+        const v = 343;
+        const multiplier = (2 * n_idx - 1);
+        const freq = (multiplier * v) / (4 * L_val);
+        const lambda = (4 * L_val) / multiplier;
+        
+        const modeText = n_idx === 1 ? "Dasar" : `Atas ${n_idx-1}`;
+        
+        document.getElementById('dispL').innerText = L_val.toFixed(2);
+        document.getElementById('valFreq').innerText = Math.round(freq);
+        document.getElementById('valMode').innerText = modeText;
+        document.getElementById('valLambda').innerText = lambda.toFixed(2);
 
-    oscillator.type = "sine";
-    oscillator.frequency.setValueAtTime(freq, audioCtx.currentTime);
-
-    oscillator.connect(gainNode);
-    gainNode.connect(audioCtx.destination);
-
-    gainNode.gain.setValueAtTime(0, audioCtx.currentTime);
-    gainNode.gain.linearRampToValueAtTime(0.05, audioCtx.currentTime + 0.05);
-
-    oscillator.start();
-}
-
-function stopSound(){
-    if(oscillator && gainNode && audioCtx){
-        let now = audioCtx.currentTime;
-
-        gainNode.gain.setValueAtTime(gainNode.gain.value, now);
-        gainNode.gain.linearRampToValueAtTime(0, now + 0.05);
-
-        oscillator.stop(now + 0.05);
-        oscillator = null;
-    }
-}
-
-function toggleSound(){
-    isPlaying = !isPlaying;
-
-    let L = parseFloat(document.getElementById("L").value);
-    let nReal = getRealN();
-    let f = nReal * v / (4 * L);
-
-    if(isPlaying){
-        startSound(f);
-    } else {
-        stopSound();
-    }
-}
-
-function draw(){
-    ctx.clearRect(0,0,canvas.width,canvas.height);
-
-    let L = parseFloat(document.getElementById("L").value);
-    let nReal = getRealN();
-
-    let f = nReal * v / (4 * L);
-
-    document.getElementById("freq").innerText =
-        "f = " + f.toFixed(2) + " Hz";
-    document.getElementById("Lval").innerText = L.toFixed(2);
-
-    if(isPlaying && oscillator){
-        oscillator.frequency.setValueAtTime(f, audioCtx.currentTime);
+        if (isPlaying && audioCtx) {
+            osc.frequency.setTargetAtTime(freq, audioCtx.currentTime, 0.1);
+        }
     }
 
-    let maxVisual = canvas.width * 0.85;
-    let minL = 0.2;
-    let maxL = 1.2;
+    function draw() {
+        const w = canvas.width / (window.devicePixelRatio || 1);
+        const h = canvas.height / (window.devicePixelRatio || 1);
+        ctx.clearRect(0, 0, w, h);
 
-    let pipeLength = ((L - minL)/(maxL-minL))*maxVisual + 100;
-    let offsetX = (canvas.width - pipeLength)/2;
+        const pX = 50, pY = h/2 - 45, pH = 90, pW = w - 100;
+        time += 0.12;
 
-    let scale = pipeLength / L;
+        // 1. Gambar Pipa (Ujung Kanan Tertutup)
+        ctx.strokeStyle = "#94a3b8";
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+        ctx.moveTo(pX, pY); // Atas
+        ctx.lineTo(pX + pW, pY);
+        ctx.lineTo(pX + pW, pY + pH); // Tutup Kanan
+        ctx.lineTo(pX, pY + pH); // Bawah
+        ctx.stroke();
 
-    // pipa (kiri tertutup)
-    ctx.strokeStyle="#38bdf8";
-    ctx.beginPath();
-    ctx.moveTo(offsetX,50);
-    ctx.lineTo(offsetX+pipeLength,50);
-    ctx.moveTo(offsetX,210);
-    ctx.lineTo(offsetX+pipeLength,210);
-    ctx.moveTo(offsetX,50);
-    ctx.lineTo(offsetX,210);
-    ctx.stroke();
+        // 2. Gelombang Stasioner (P di kiri, S di kanan)
+        const vib = Math.sin(time);
+        const multiplier = (2 * n_idx - 1);
+        
+        ctx.lineWidth = 2.5;
+        for(let s of [-1, 1]) {
+            ctx.strokeStyle = s === 1 ? "#f43f5e" : "rgba(244, 63, 94, 0.3)";
+            ctx.beginPath();
+            for(let x = 0; x <= pW; x++) {
+                // Fungsi Cosine: di x=0 nilainya 1 (Perut), di x=L nilainya 0 (Simpul)
+                const k = (multiplier * Math.PI) / (2 * pW);
+                const y = Math.cos(k * x) * (pH/2.3) * vib * s;
+                if(x === 0) ctx.moveTo(pX + x, h/2 + y);
+                else ctx.lineTo(pX + x, h/2 + y);
+            }
+            ctx.stroke();
+        }
 
-    // envelope
-    ctx.beginPath();
-    for(let x=0;x<=L;x+=0.001){
-        let y = Math.abs(Math.sin(nReal*Math.PI*x/(2*L)));
-        let X = offsetX + x*scale;
-        ctx.lineTo(X,130 - y*70);
+        // 3. Label P (Perut) dan S (Simpul)
+        ctx.font = "bold 14px Arial";
+        ctx.textAlign = "center";
+        
+        // Logika penempatan label sesuai pola (2n-1)/4 lambda
+        // Perut (P) terjadi saat cos = 1 atau -1
+        ctx.fillStyle = "#f43f5e";
+        for (let i = 0; i < n_idx; i++) {
+            const xPos = pX + (i * 2 * pW / multiplier);
+            if(xPos <= pX + pW + 1) ctx.fillText("P", xPos, pY - 15);
+        }
+
+        // Simpul (S) terjadi saat cos = 0
+        ctx.fillStyle = "#38bdf8";
+        for (let i = 0; i < n_idx; i++) {
+            const xPos = pX + ((2 * i + 1) * pW / multiplier);
+            if(xPos <= pX + pW + 1) ctx.fillText("S", xPos, pY - 15);
+        }
+
+        // 4. Partikel Udara Longitudinal
+        const step = 15;
+        for (let x = 0; x <= pW; x += step) {
+            for (let y = 12; y < pH; y += step) {
+                const k = (multiplier * Math.PI) / (2 * pW);
+                // Amplitudo longitudinal mengikuti cosinus (maks di ujung terbuka)
+                const dx = Math.cos(k * x) * 15 * Math.sin(time);
+                ctx.fillStyle = "#38bdf8";
+                ctx.globalAlpha = 0.35;
+                ctx.beginPath();
+                ctx.arc(pX + x + dx, pY + y, 1.8, 0, Math.PI*2);
+                ctx.fill();
+            }
+        }
+        
+        ctx.globalAlpha = 1.0;
+        requestAnimationFrame(draw);
     }
-    for(let x=L;x>=0;x-=0.001){
-        let y = Math.abs(Math.sin(nReal*Math.PI*x/(2*L)));
-        let X = offsetX + x*scale;
-        ctx.lineTo(X,130 + y*70);
-    }
-    ctx.strokeStyle="rgba(255,255,255,0.3)";
-    ctx.stroke();
 
-    // gelombang
-    ctx.beginPath();
-    for(let x=0;x<=L;x+=0.001){
-        let y = Math.sin(nReal*Math.PI*x/(2*L))*Math.cos(2*Math.PI*f*t);
-        let X = offsetX + x*scale;
-        let Y = 130 - y*70;
+    document.getElementById('audioBtn').addEventListener('click', function() {
+        if (!audioCtx) {
+            audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            osc = audioCtx.createOscillator();
+            gainNode = audioCtx.createGain();
+            osc.connect(gainNode);
+            gainNode.connect(audioCtx.destination);
+            gainNode.gain.value = 0;
+            osc.start();
+        }
+        if (!isPlaying) {
+            this.innerText = "MATIKAN SUARA";
+            this.classList.add('active');
+            gainNode.gain.setTargetAtTime(0.08, audioCtx.currentTime, 0.1);
+            isPlaying = true;
+            update();
+        } else {
+            this.innerText = "AKTIFKAN SUARA & GETARAN";
+            this.classList.remove('active');
+            gainNode.gain.setTargetAtTime(0, audioCtx.currentTime, 0.1);
+            isPlaying = false;
+        }
+    });
 
-        if(x===0) ctx.moveTo(X,Y);
-        else ctx.lineTo(X,Y);
-    }
-    ctx.strokeStyle="#22c55e";
-    ctx.stroke();
+    window.addEventListener('resize', initCanvas);
+    document.getElementById('pipeLength').addEventListener('input', update);
+    document.getElementById('harmonicSelect').addEventListener('change', update);
 
-    // animasi udara (kanan saja)
-    let air = Math.cos(2*Math.PI*f*t)*10;
-    ctx.beginPath();
-    ctx.arc(offsetX + pipeLength + 15 - air,130,5,0,2*Math.PI);
-    ctx.fillStyle="cyan";
-    ctx.fill();
-
-    // label utama
-    ctx.fillStyle="red";
-    ctx.fillText("S", offsetX-10,130);
-
-    ctx.fillStyle="yellow";
-    ctx.fillText("P", offsetX + pipeLength + 5,130);
-
-    // watermark
-    ctx.fillStyle="rgba(255,255,255,0.2)";
-    ctx.fillText("Dwi Yono, S.Pd", 10, 250);
-
-    t += 0.01;
-    requestAnimationFrame(draw);
-}
-
-draw();
+    initCanvas();
+    update();
+    draw();
 </script>
 
 </body>
